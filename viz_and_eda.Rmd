@@ -215,7 +215,8 @@ ggplot(weather_df, aes(x = name, y = tmax)) + geom_boxplot()
 #violin plots
 ggplot(weather_df, aes(x = name, y = tmax)) + 
   geom_violin(aes(fill = name), alpha = .5) + 
-  stat_summary(fun = "median", color = "blue")
+  stat_summary(fun = "mean", color = "blue", size = .2) +
+  stat_summary(fun = "median", color = "red", size = .2)
 
 #ridge plots - nice if you have lots of categories in which the shape of the distribution matters. 
 ggplot(weather_df, aes(x = tmax, y = name)) + 
@@ -230,6 +231,9 @@ ggplot(weather_df, aes(x = tmax, y = name)) +
 #density plot
 ggplot(weather_df, aes(x = prcp)) + 
   geom_density(aes(fill = name), alpha = 0.5) 
+
+ggplot(weather_df, aes(x = name, y = tmax)) + 
+  geom_boxplot() 
 
 #ridge plot
 ggplot(weather_df, aes(x = prcp, y = name)) +
@@ -255,6 +259,7 @@ weather_plot = ggplot(weather_df, aes(x = tmin, y = tmax)) +
 
 ggsave("weather_plot.pdf", weather_plot, width = 8, height = 5)
 
+
 #Embedding plots: The size of the figure created by R is controlled using 2 of the 3 chunk options `fig.width`, `fig.height`, `fig.asp`. Second is the size of the figure inserted into your document, which is controlled using `out.width` or `out.height`. 
 
 knitr::opts_chunk$set(
@@ -262,6 +267,16 @@ knitr::opts_chunk$set(
   fig.asp = .6,
   out.width = "90%"
 )
+```
+
+#Embed at different size
+
+```{r, fig.width = 6, fig.height = 3}
+weather_plot
+```
+
+```{r, fig.width = 12, fig.height = 6}
+weather_plot
 ```
 
 

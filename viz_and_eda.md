@@ -432,7 +432,8 @@ ggplot(weather_df, aes(x = name, y = tmax)) + geom_boxplot()
 #violin plots
 ggplot(weather_df, aes(x = name, y = tmax)) + 
   geom_violin(aes(fill = name), alpha = .5) + 
-  stat_summary(fun = "median", color = "blue")
+  stat_summary(fun = "mean", color = "blue", size = .2) +
+  stat_summary(fun = "median", color = "red", size = .2)
 ```
 
 ![](viz_and_eda_files/figure-gfm/unnamed-chunk-10-8.png)<!-- -->
@@ -462,6 +463,15 @@ ggplot(weather_df, aes(x = prcp)) +
 ![](viz_and_eda_files/figure-gfm/unnamed-chunk-11-1.png)<!-- -->
 
 ``` r
+ggplot(weather_df, aes(x = name, y = tmax)) + 
+  geom_boxplot() 
+```
+
+    ## Warning: Removed 3 rows containing non-finite values (stat_boxplot).
+
+![](viz_and_eda_files/figure-gfm/unnamed-chunk-11-2.png)<!-- -->
+
+``` r
 #ridge plot
 ggplot(weather_df, aes(x = prcp, y = name)) +
   geom_density_ridges(scale = 0.85)
@@ -471,7 +481,7 @@ ggplot(weather_df, aes(x = prcp, y = name)) +
 
     ## Warning: Removed 3 rows containing non-finite values (stat_density_ridges).
 
-![](viz_and_eda_files/figure-gfm/unnamed-chunk-11-2.png)<!-- -->
+![](viz_and_eda_files/figure-gfm/unnamed-chunk-11-3.png)<!-- -->
 
 ``` r
 #boxplot
@@ -481,7 +491,7 @@ ggplot(weather_df, aes(x = prcp, y = name)) +
 
     ## Warning: Removed 3 rows containing non-finite values (stat_boxplot).
 
-![](viz_and_eda_files/figure-gfm/unnamed-chunk-11-3.png)<!-- -->
+![](viz_and_eda_files/figure-gfm/unnamed-chunk-11-4.png)<!-- -->
 
 ``` r
 # This is a tough variable to plot because of the highly skewed distribution in each location. Of these, I'd probably choose the boxplot because it shows the outliers most clearly. If the bulk of the data were interesting, I'd probably compliment this with a plot showing data for all precipiation less than 100, or for a data omitting days with no precipitation. 
@@ -493,7 +503,7 @@ weather_df %>%
 
     ## Picking joint bandwidth of 19.7
 
-![](viz_and_eda_files/figure-gfm/unnamed-chunk-11-4.png)<!-- -->
+![](viz_and_eda_files/figure-gfm/unnamed-chunk-11-5.png)<!-- -->
 
 ## Saving and embedding plots
 
@@ -516,5 +526,23 @@ knitr::opts_chunk$set(
   out.width = "90%"
 )
 ```
+
+\#Embed at different size
+
+``` r
+weather_plot
+```
+
+    ## Warning: Removed 15 rows containing missing values (geom_point).
+
+<img src="viz_and_eda_files/figure-gfm/unnamed-chunk-13-1.png" width="90%" />
+
+``` r
+weather_plot
+```
+
+    ## Warning: Removed 15 rows containing missing values (geom_point).
+
+<img src="viz_and_eda_files/figure-gfm/unnamed-chunk-14-1.png" width="90%" />
 
 # Visualization with `ggplot2` - Part II
