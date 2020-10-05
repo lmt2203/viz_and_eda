@@ -1,0 +1,12 @@
+---
+title: "Visualization and EDA"
+author: "Linh Tran"
+date: "10/5/2020"
+output: html_document
+---
+
+```{r setup}
+library(tidyverse)
+library(ggridges)
+```
+
