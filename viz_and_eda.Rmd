@@ -2,7 +2,7 @@
 title: "Visualization and EDA"
 author: "Linh Tran"
 date: "10/5/2020"
-output: html_document
+output: github_document
 ---
 
 ```{r setup}
@@ -11,6 +11,8 @@ library(ggridges)
 ```
 
 ```{r, warning = FALSE}
+#Creating a df using meteo_pull_monitors in the `rnoaa` package
+
 weather_df = 
   rnoaa::meteo_pull_monitors(
     c("USW00094728", "USC00519397", "USS0023B17S"),
@@ -30,7 +32,7 @@ weather_df =
 weather_df
 ```
 
-# Visualization with `ggplot2`
+# Visualization with `ggplot2` - Part I
 
 ## Basic scatterplot
 To create a basic scatterplot, need to map variables to the X and Y coordinate aesthetics, add geoms to define 
@@ -38,7 +40,7 @@ To create a basic scatterplot, need to map variables to the X and Y coordinate a
 ```{r, warning = FALSE}
 ggplot(weather_df, aes(x = tmin, y = tmax)) + geom_point()
 
-#or use this code below to produce same figure:
+#New approach, same plot:
 
 weather_df %>% 
   ggplot(aes(x = tmin, y = tmax)) +
@@ -59,6 +61,11 @@ The basic scatterplot gave some useful information - the variables are related r
 `name` can be incorporated using the `color` aesthetic
 
 ```{r, warning = FALSE}
+
+ggplot(weather_df, aes(x = tmin, y = tmax, color = name)) +
+  geom_point() +
+  geom_smooth(se = FALSE)
+  
 #`name` can be incorporated using the `color` aesthetic
 
 ggplot(weather_df, aes(x = tmin, y = tmax)) +
@@ -78,6 +85,17 @@ ggplot(weather_df, aes(x = tmin, y = tmax)) +
   geom_point(aes(color = name), alpha = 0.5) +
   geom_smooth(se = FALSE) +
   facet_grid(. ~ name)
+
+
+ggplot(weather_df, aes(x = tmin, y = tmax, color = name)) +
+  geom_point(alpha = .2, size = 0.6) +      #alpha =.5 equals to 50% transparency
+  geom_smooth(se = FALSE) +
+  facet_grid(. ~ name)
+
+ggplot(weather_df, aes(x = tmin, y = tmax,alpha = tmin, color = name)) +
+  geom_point() +
+  geom_smooth(se = FALSE) +
+  facet_grid(. ~ name)
 ```
 
 I've learned a lot about these data. However, the relationship between min and max temperature is now kinda boring, so I'd prefer something that shows the time of year. I also want to learn about precipitation.
@@ -87,6 +105,28 @@ ggplot(weather_df, aes(x = date, y = tmax, color = name)) +
   geom_point(aes(size = prcp), alpha = 0.5) +
   geom_smooth(se = FALSE) + 
   facet_grid(. ~ name)
+
+ggplot(weather_df, aes(x = date, y = tmax, color = name)) +
+  geom_point(aes(size = prcp), alpha = 0.5) +
+  geom_smooth(se = FALSE) + 
+  facet_grid(name ~ .)
+```
+
+You can use a neat geom!
+
+```{r}
+weather_df %>% 
+  ggplot(aes(x = tmin, y = tmax)) +
+  geom_hex()
+
+weather_df %>% 
+  ggplot(aes(x = tmin, y = tmax)) +
+  geom_bin2d()
+
+weather_df %>% 
+  ggplot(aes(x = tmin, y = tmax)) +
+  geom_density2d() + 
+  geom_point(alpha = .3)
 ```
 
 #### Learning Assessment 1
@@ -145,6 +185,19 @@ Look at the distribution of single variables - this is an issue of learning some
 ggplot(weather_df, aes(x = tmax)) + 
   geom_histogram()
 
+#Can we add color
+ggplot(weather_df, aes(x = tmax, color = name)) + 
+  geom_histogram()
+
+weather_df %>% 
+  ggplot(aes(x = tmax, fill = name)) +
+  geom_histogram(position = "dodge")
+
+weather_df %>% 
+  ggplot(aes(x = tmax, fill = name)) +
+  geom_histogram() + 
+  facet_grid(. ~ name)
+
 #Play around with bin width and set the fill color using an aesthetic mapping. 
 
 ggplot(weather_df, aes(x = tmax, fill = name)) +
@@ -176,6 +229,40 @@ ggplot(weather_df, aes(x = tmax, y = name)) +
 
 #density plot
 ggplot(weather_df, aes(x = prcp)) + 
-  geom_density(aes(fill = name), alpha = .5) 
+  geom_density(aes(fill = name), alpha = 0.5) 
+
+#ridge plot
+ggplot(weather_df, aes(x = prcp, y = name)) +
+  geom_density_ridges(scale = 0.85)
+  
+#boxplot
+ggplot(weather_df, aes(x = prcp, y = name)) +
+  geom_boxplot()
+
+# This is a tough variable to plot because of the highly skewed distribution in each location. Of these, I'd probably choose the boxplot because it shows the outliers most clearly. If the bulk of the data were interesting, I'd probably compliment this with a plot showing data for all precipiation less than 100, or for a data omitting days with no precipitation. 
+weather_df %>% 
+  filter(prcp > 0) %>% 
+  ggplot(aes(x = prcp, y = name)) +
+  geom_density_ridges(scale = 0.85)
 ```
 
+## Saving and embedding plots
+
+```{r}
+#Don't use export function - your figure will not be reproducible 
+weather_plot = ggplot(weather_df, aes(x = tmin, y = tmax)) + 
+  geom_point(aes(color = name), alpha = .5) 
+
+ggsave("weather_plot.pdf", weather_plot, width = 8, height = 5)
+
+#Embedding plots: The size of the figure created by R is controlled using 2 of the 3 chunk options `fig.width`, `fig.height`, `fig.asp`. Second is the size of the figure inserted into your document, which is controlled using `out.width` or `out.height`. 
+
+knitr::opts_chunk$set(
+  fig.width = 6,
+  fig.asp = .6,
+  out.width = "90%"
+)
+```
+
+
+# Visualization with `ggplot2` - Part II
