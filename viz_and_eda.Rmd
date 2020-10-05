@@ -10,3 +10,80 @@ library(tidyverse)
 library(ggridges)
 ```
 
+```{r, warning = FALSE}
+weather_df = 
+  rnoaa::meteo_pull_monitors(
+    c("USW00094728", "USC00519397", "USS0023B17S"),
+    var = c("PRCP", "TMIN", "TMAX"), 
+    date_min = "2017-01-01",
+    date_max = "2017-12-31") %>%
+  mutate(
+    name = recode(
+      id, 
+      USW00094728 = "CentralPark_NY", 
+      USC00519397 = "Waikiki_HA",
+      USS0023B17S = "Waterhole_WA"),
+    tmin = tmin / 10,
+    tmax = tmax / 10) %>%
+  select(name, id, everything())
+
+weather_df
+```
+
+## Basic scatterplot
+To create a basic scatterplot, need to map variables to the X and Y coordinate aesthetics, add geoms to define 
+
+```{r, warning = FALSE}
+ggplot(weather_df, aes(x = tmin, y = tmax)) + geom_point()
+
+#or use this code below to produce same figure:
+
+weather_df %>% 
+  ggplot(aes(x = tmin, y = tmax)) +
+  geom_point()
+
+#save the output to an object and modify/print later:
+
+plot_weather = 
+  weather_df %>% 
+  ggplot(aes(x = tmin, y = tmax)) 
+
+plot_weather + geom_point()
+```
+The basic scatterplot gave some useful information - the variables are related roughly as we'd expect, and there aren't any obvious outliers to investigate before moving on. 
+
+## Advanced scatterplot - additional aesthetic mappings
+
+`name` can be incorporated using the `color` aesthetic
+
+```{r, warning = FALSE}
+#`name` can be incorporated using the `color` aesthetic
+
+ggplot(weather_df, aes(x = tmin, y = tmax)) +
+  geom_point(aes(color = name))
+
+#add a smooth curve and make the data points more transparent.
+ggplot(weather_df, aes(x = tmin, y = tmax)) +
+  geom_point(aes(color = name), alpha = 0.5) +
+  geom_smooth(se = FALSE)
+```
+The curve gives a sense of the relationship between variables, and the transparency shows where data are overlapping. However, the smooth curve is for all the data but the colors are only for the scatterplot. That is because X and Y mappings apply to the whole graphic, but color is currently geom-specific. I am having a hard time seeing everything on one plot, so I'm going to add facet based on name as well.
+
+```{r, warning = FALSE}
+#add facet based on name
+
+ggplot(weather_df, aes(x = tmin, y = tmax)) +
+  geom_point(aes(color = name), alpha = 0.5) +
+  geom_smooth(se = FALSE) +
+  facet_grid(. ~ name)
+```
+
+I've learned a lot about these data. However, the relationship between min and max temperature is now kinda boring, so I'd prefer something that shows the time of year. I also want to learn about precipitation.
+
+```{r, warning = FALSE}
+ggplot(weather_df, aes(x = date, y = tmax, color = name)) +
+  geom_point(aes(size = prcp), alpha = 0.5) +
+  geom_smooth(se = FALSE) + 
+  facet_grid(. ~ name)
+```
+
