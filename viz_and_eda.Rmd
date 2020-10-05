@@ -30,6 +30,8 @@ weather_df =
 weather_df
 ```
 
+# Visualization with `ggplot2`
+
 ## Basic scatterplot
 To create a basic scatterplot, need to map variables to the X and Y coordinate aesthetics, add geoms to define 
 
@@ -85,5 +87,95 @@ ggplot(weather_df, aes(x = date, y = tmax, color = name)) +
   geom_point(aes(size = prcp), alpha = 0.5) +
   geom_smooth(se = FALSE) + 
   facet_grid(. ~ name)
+```
+
+#### Learning Assessment 1
+Write a code chain focuses only on Central park, converts temperatures to Fahrenheit, make a scatterplot of min vs. max temperature, and overlay a linear regression line using options in geom_smooth()
+
+```{r, warning = FALSE}
+#this is my solution
+library(dplyr)
+ggplot(weather_df %>% 
+  filter(name == "CentralPark_NY"), 
+  aes(x = tmin, y = tmax)) +
+  geom_point(aes(color = name)) + 
+  geom_smooth()
+
+#this is the right solution
+weather_df %>% 
+  filter(name == "CentralPark_NY") %>% 
+  mutate(
+    tmax_fahr = tmax * (9 / 5) + 32,
+    tmin_fahr = tmin * (9 / 5) + 32) %>% 
+  ggplot(aes(x = tmin_fahr, y = tmax_fahr)) +
+  geom_point(alpha = .5) + 
+  geom_smooth(method = "lm", se = FALSE)
+#Looks like there's a pretty linear relationship between min and max temperature in Central Park.
+```
+
+## Odds and Ends
+
+```{r}
+# There are lots of ways to mix and match elements, depending on your goals
+ggplot(weather_df, aes(x = date, y = tmax, color = name)) + 
+  geom_smooth(se = FALSE) 
+
+#When you're making scatterplot with lots of data, there's a limit to how much you can avoid overplotting using alpha levels and transparency. In these cases, `geom_hex()`, `geom_bin2d()`, or `geom_density2d()` can be handy
+library(ggplot2)
+ggplot(weather_df, aes(x = tmax, y = tmin)) +
+  geom_hex()
+
+#`color` worked for both geom_point() and geom_smooth() but `shape` only applies to points. 
+```
+
+#### Learning Assessment 2
+
+```{r}
+ggplot(weather_df) + geom_point(aes(x = tmax, y = tmin), color = "blue")
+ggplot(weather_df) + geom_point(aes(x = tmax, y = tmin, color = "blue"))
+
+#These lines don't produce the same result because in the 1st attempt, we're defining the color of the points by hand; in the 2nd attempt, we're implicitly creating a color variable that has the value "blue" everywhere; ggplot is then assigning colors according to this variable using the default color scheme.
+```
+
+## Univariate plots
+
+Look at the distribution of single variables - this is an issue of learning some new geoms, and some new aesthetics. 
+
+```{r, warning = FALSE}
+ggplot(weather_df, aes(x = tmax)) + 
+  geom_histogram()
+
+#Play around with bin width and set the fill color using an aesthetic mapping. 
+
+ggplot(weather_df, aes(x = tmax, fill = name)) +
+  geom_histogram(position = "dodge", binwidth = 2)
+ 
+#`position = "dodge` places the bars for each group side-by-side, but it can be hard to understand. prefer density plots over histogram. 
+
+ggplot(weather_df, aes(x = tmax, fill = name)) +
+  geom_density(alpha = 0.4, adjust = 0.5, color = "blue")
+#`adjust` similar to `bindwidth` parameter. alpha = transparency level = 0.4 to make sure all densities appear. Lastly, adding `geom_rug()` can be helpful to show the raw data in addition to the density.
+
+#boxplot
+ggplot(weather_df, aes(x = name, y = tmax)) + geom_boxplot()
+
+#violin plots
+ggplot(weather_df, aes(x = name, y = tmax)) + 
+  geom_violin(aes(fill = name), alpha = .5) + 
+  stat_summary(fun = "median", color = "blue")
+
+#ridge plots - nice if you have lots of categories in which the shape of the distribution matters. 
+ggplot(weather_df, aes(x = tmax, y = name)) + 
+  geom_density_ridges(scale = .85)
+```
+
+#### Learning Assessment 3
+
+```{r}
+#Make plots that compare precipitation across location. Try histogram, density plot, boxplot, violin plot and ridgeplot
+
+#density plot
+ggplot(weather_df, aes(x = prcp)) + 
+  geom_density(aes(fill = name), alpha = .5) 
 ```
 
