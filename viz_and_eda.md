@@ -7,14 +7,14 @@ Linh Tran
 library(tidyverse)
 ```
 
-    ## ── Attaching packages ────────────────────────────────────────────────────────────────────────────────────── tidyverse 1.3.0 ──
+    ## ── Attaching packages ───────────────────────────────────────────────────────────────────────────────────────── tidyverse 1.3.0 ──
 
     ## ✓ ggplot2 3.3.2     ✓ purrr   0.3.4
     ## ✓ tibble  3.0.3     ✓ dplyr   1.0.2
     ## ✓ tidyr   1.1.2     ✓ stringr 1.4.0
     ## ✓ readr   1.3.1     ✓ forcats 0.5.0
 
-    ## ── Conflicts ───────────────────────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ──
+    ## ── Conflicts ──────────────────────────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ──
     ## x dplyr::filter() masks stats::filter()
     ## x dplyr::lag()    masks stats::lag()
 
@@ -555,8 +555,8 @@ Revisit the scatterplot of tmax against tmin
 
 ``` r
 weather_df %>% 
-  ggplot(aes(x = tmin, y = tmax)) + 
-  geom_point(aes(color = name), alpha = .5)
+  ggplot(aes(x = tmin, y = tmax, color = name)) + 
+  geom_point(alpha = .5)
 ```
 
     ## Warning: Removed 15 rows containing missing values (geom_point).
@@ -586,6 +586,8 @@ weather_df %>%
 Control over the location and specification of tick marks on the X or Y
 axis - You can use `scale_x_*` and `scale_y_*` where \* depends on the
 type of variable (i.e. continuous vs discrete)
+
+x and y scales
 
 ``` r
 weather_df %>% 
@@ -631,7 +633,7 @@ weather_df %>%
 
 <img src="viz_and_eda_files/figure-gfm/unnamed-chunk-18-2.png" width="90%" />
 
-\#`scale_color_hue`
+Let’s look at `scale_color_hue`
 
 ``` r
 weather_df %>% 
@@ -649,7 +651,7 @@ weather_df %>%
 
 <img src="viz_and_eda_files/figure-gfm/unnamed-chunk-19-1.png" width="90%" />
 
-\#`viridis` package
+#### Viridis package
 
 ``` r
 ggp_temp_plot = 
@@ -674,13 +676,252 @@ ggp_temp_plot
 
 <img src="viz_and_eda_files/figure-gfm/unnamed-chunk-20-1.png" width="90%" />
 
-\#Themes
+#### Themes
+
+Shift the legend
 
 ``` r
 ggp_temp_plot + 
-  theme(legend.position = "bottom")
+  theme(legend.position = "bottom") 
 ```
 
     ## Warning: Removed 15 rows containing missing values (geom_point).
 
 <img src="viz_and_eda_files/figure-gfm/unnamed-chunk-21-1.png" width="90%" />
+
+Change the overall theme (background)
+
+``` r
+ggp_temp_plot + theme_bw()
+```
+
+    ## Warning: Removed 15 rows containing missing values (geom_point).
+
+<img src="viz_and_eda_files/figure-gfm/unnamed-chunk-22-1.png" width="90%" />
+
+``` r
+ggp_temp_plot + theme_minimal()
+```
+
+    ## Warning: Removed 15 rows containing missing values (geom_point).
+
+<img src="viz_and_eda_files/figure-gfm/unnamed-chunk-22-2.png" width="90%" />
+
+``` r
+ggp_temp_plot + theme_classic()
+```
+
+    ## Warning: Removed 15 rows containing missing values (geom_point).
+
+<img src="viz_and_eda_files/figure-gfm/unnamed-chunk-22-3.png" width="90%" />
+
+``` r
+ggp_temp_plot = 
+  weather_df %>% 
+  ggplot(aes(x = tmin, y = tmax)) + 
+  geom_point(aes(color = name), alpha = .5) + 
+  labs(
+    title = "Temperature plot",
+    x = "Minimum daily temperature (C)",
+    y = "Maxiumum daily temperature (C)",
+    caption = "Data from the rnoaa package"
+  ) + 
+  viridis::scale_color_viridis(
+    name = "Location", 
+    discrete = TRUE) +
+  theme_minimal() +
+  theme(legend.position = "bottom")
+```
+
+#### Setting options
+
+These are options that I will put at the very beginning
+
+``` r
+library(tidyverse)
+
+knitr::opts_chunk$set(
+  fig.width = 6,
+  fig.asp = .6  #height/width
+  out.width = "90%"
+)
+
+theme_set(theme_minimal() + theme(legend.position = "bottom")) #determine theme i want to exist everywhere
+
+options(
+  ggplot2.continuous.colour = "viridis",
+  ggplot2.continuous.fill = "viridis"
+)
+
+scale_colour_discrete = scale_color_viridis_d
+scale_colour_continuous = scale_color_viridis_c
+```
+
+#### Data arguments in `geom`
+
+``` r
+central_park = 
+  weather_df %>% 
+  filter(name == "CentralPark_NY")
+
+waikiki = 
+  weather_df %>% 
+  filter(name == "Waikiki_HA")
+
+ggplot(data = waikiki, aes(x = date, y = tmax, color = name)) +
+  geom_point() +
+  geom_line()
+```
+
+    ## Warning: Removed 3 rows containing missing values (geom_point).
+
+<img src="viz_and_eda_files/figure-gfm/unnamed-chunk-24-1.png" width="90%" />
+
+``` r
+ggplot(data = waikiki, aes(x = date, y = tmax, color = name)) +
+  geom_point() +
+  geom_line(data = central_park)
+```
+
+    ## Warning: Removed 3 rows containing missing values (geom_point).
+
+<img src="viz_and_eda_files/figure-gfm/unnamed-chunk-24-2.png" width="90%" />
+
+#### `patchwork`
+
+Remember faceting?
+
+``` r
+weather_df %>% 
+  ggplot(aes(x = tmin, fill = name)) +
+  geom_density(alpha = .5) +
+  facet_grid(.~name)
+```
+
+    ## Warning: Removed 15 rows containing non-finite values (stat_density).
+
+<img src="viz_and_eda_files/figure-gfm/unnamed-chunk-25-1.png" width="90%" />
+
+What happens when you want multipanel plots but can’t facet..?
+
+``` r
+tmax_tmin_plot =
+  weather_df %>% 
+  ggplot(aes(x = tmin, y = tmax, color = name)) +
+  geom_point(alpha =.5) +
+  theme(legend.position = "none")
+
+prcp_dens_plot =
+  weather_df %>% 
+  filter(prcp > 0) %>% 
+  ggplot(aes(x = prcp, fill = name)) +
+  geom_density(alpha =.5) +
+  theme(legend.position = "none")
+
+tmax_date_plot = 
+  weather_df %>% 
+  ggplot(aes(x = date, y = tmax, color = name)) +
+  geom_point() +
+  geom_smooth(se = FALSE) +
+  theme(legend.position = "none")
+
+tmax_tmin_plot + prcp_dens_plot 
+```
+
+    ## Warning: Removed 15 rows containing missing values (geom_point).
+
+<img src="viz_and_eda_files/figure-gfm/unnamed-chunk-26-1.png" width="90%" />
+
+``` r
+tmax_tmin_plot + prcp_dens_plot + tmax_date_plot
+```
+
+    ## Warning: Removed 15 rows containing missing values (geom_point).
+
+    ## `geom_smooth()` using method = 'loess' and formula 'y ~ x'
+
+    ## Warning: Removed 3 rows containing non-finite values (stat_smooth).
+
+    ## Warning: Removed 3 rows containing missing values (geom_point).
+
+<img src="viz_and_eda_files/figure-gfm/unnamed-chunk-26-2.png" width="90%" />
+
+``` r
+(tmax_tmin_plot + prcp_dens_plot) / tmax_date_plot
+```
+
+    ## Warning: Removed 15 rows containing missing values (geom_point).
+
+    ## `geom_smooth()` using method = 'loess' and formula 'y ~ x'
+
+    ## Warning: Removed 3 rows containing non-finite values (stat_smooth).
+    
+    ## Warning: Removed 3 rows containing missing values (geom_point).
+
+<img src="viz_and_eda_files/figure-gfm/unnamed-chunk-26-3.png" width="90%" />
+
+#### Data manipulation
+
+``` r
+weather_df %>% 
+  ggplot(aes(x = name, y = tmax, fill = name)) +
+  geom_violin(alpha =.5)
+```
+
+    ## Warning: Removed 3 rows containing non-finite values (stat_ydensity).
+
+<img src="viz_and_eda_files/figure-gfm/unnamed-chunk-27-1.png" width="90%" />
+
+name argument might not make perfect sense. It goes in alphabetical
+order according to the name. In the dataset I have, the name variable is
+character. When make plot, ggplot turns character variable to factor (1
+= central park, 2 = waikiki, 3 = waterhole) and if I want to put them
+into different order, is there a way to overwrite that?
+
+Control your factors
+
+``` r
+weather_df %>% 
+  mutate(
+    name = factor(name),
+    name = forcats::fct_relevel(name, c("Waikiki_HA"))
+  ) %>% 
+  ggplot(aes(x = name, y = tmax, fill = name)) +
+  geom_violin(alpha =.5)
+```
+
+    ## Warning: Removed 3 rows containing non-finite values (stat_ydensity).
+
+<img src="viz_and_eda_files/figure-gfm/unnamed-chunk-28-1.png" width="90%" />
+
+What if I wanted densities for tmin and tmax simultaneously?
+
+``` r
+weather_df %>% 
+  filter(name == "CentralPark_NY") %>% 
+  pivot_longer(
+    tmax:tmin,
+    names_to = "observation",
+    values_to = "temperature"
+  ) %>% 
+  ggplot(aes(x = temperature, fill = observation)) +
+  geom_density(alpha =.5) 
+```
+
+<img src="viz_and_eda_files/figure-gfm/unnamed-chunk-29-1.png" width="90%" />
+
+``` r
+weather_df %>% 
+  pivot_longer(
+    tmax:tmin,
+    names_to = "observation",
+    values_to = "temperature"
+  ) %>% 
+  ggplot(aes(x = temperature, fill = observation)) +
+  geom_density(alpha =.5) +
+  facet_grid(.~name)
+```
+
+    ## Warning: Removed 18 rows containing non-finite values (stat_density).
+
+<img src="viz_and_eda_files/figure-gfm/unnamed-chunk-29-2.png" width="90%" />
