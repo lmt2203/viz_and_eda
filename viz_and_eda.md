@@ -546,3 +546,141 @@ weather_plot
 <img src="viz_and_eda_files/figure-gfm/unnamed-chunk-14-1.png" width="90%" />
 
 # Visualization with `ggplot2` - Part II
+
+``` r
+library(patchwork)
+```
+
+Revisit the scatterplot of tmax against tmin
+
+``` r
+weather_df %>% 
+  ggplot(aes(x = tmin, y = tmax)) + 
+  geom_point(aes(color = name), alpha = .5)
+```
+
+    ## Warning: Removed 15 rows containing missing values (geom_point).
+
+<img src="viz_and_eda_files/figure-gfm/unnamed-chunk-16-1.png" width="90%" />
+
+#### Labels
+
+``` r
+weather_df %>% 
+  ggplot(aes(x = tmin, y = tmax)) + 
+  geom_point(aes(color = name), alpha = .5) + 
+  labs(
+    title = "Temperature plot",
+    x = "Minimum daily temperature (C)",
+    y = "Maxiumum daily temperature (C)",
+    caption = "Data from the rnoaa package"
+  )
+```
+
+    ## Warning: Removed 15 rows containing missing values (geom_point).
+
+<img src="viz_and_eda_files/figure-gfm/unnamed-chunk-17-1.png" width="90%" />
+
+#### Scales
+
+Control over the location and specification of tick marks on the X or Y
+axis - You can use `scale_x_*` and `scale_y_*` where \* depends on the
+type of variable (i.e. continuous vs discrete)
+
+``` r
+weather_df %>% 
+  ggplot(aes(x = tmin, y = tmax)) + 
+  geom_point(aes(color = name), alpha = .5) + 
+  labs(
+    title = "Temperature plot",
+    x = "Minimum daily temperature (C)",
+    y = "Maxiumum daily temperature (C)",
+    caption = "Data from the rnoaa package") + 
+  scale_x_continuous(
+    breaks = c(-15, 0, 15), 
+    labels = c("-15º C", "0", "15"))
+```
+
+    ## Warning: Removed 15 rows containing missing values (geom_point).
+
+<img src="viz_and_eda_files/figure-gfm/unnamed-chunk-18-1.png" width="90%" />
+
+``` r
+weather_df %>% 
+  ggplot(aes(x = tmin, y = tmax)) + 
+  geom_point(aes(color = name), alpha = .5) + 
+  labs(
+    title = "Temperature plot",
+    x = "Minimum daily temperature (C)",
+    y = "Maxiumum daily temperature (C)",
+    caption = "Data from the rnoaa package") + 
+  scale_x_continuous(
+    breaks = c(-15, 0, 15), 
+    labels = c("-15ºC", "0", "15"),
+    limits = c(-20, 30)) + 
+  scale_y_continuous(
+    trans = "sqrt", 
+    position = "right")
+```
+
+    ## Warning in self$trans$transform(x): NaNs produced
+
+    ## Warning: Transformation introduced infinite values in continuous y-axis
+
+    ## Warning: Removed 90 rows containing missing values (geom_point).
+
+<img src="viz_and_eda_files/figure-gfm/unnamed-chunk-18-2.png" width="90%" />
+
+\#`scale_color_hue`
+
+``` r
+weather_df %>% 
+  ggplot(aes(x = tmin, y = tmax)) + 
+  geom_point(aes(color = name), alpha = .5) + 
+  labs(
+    title = "Temperature plot",
+    x = "Minimum daily temperature (C)",
+    y = "Maxiumum daily temperature (C)",
+    caption = "Data from the rnoaa package") + 
+  scale_color_hue(name = "Location", h = c(100, 300))
+```
+
+    ## Warning: Removed 15 rows containing missing values (geom_point).
+
+<img src="viz_and_eda_files/figure-gfm/unnamed-chunk-19-1.png" width="90%" />
+
+\#`viridis` package
+
+``` r
+ggp_temp_plot = 
+  weather_df %>% 
+  ggplot(aes(x = tmin, y = tmax)) + 
+  geom_point(aes(color = name), alpha = .5) + 
+  labs(
+    title = "Temperature plot",
+    x = "Minimum daily temperature (C)",
+    y = "Maxiumum daily temperature (C)",
+    caption = "Data from the rnoaa package"
+  ) + 
+  viridis::scale_color_viridis(
+    name = "Location", 
+    discrete = TRUE
+  )
+
+ggp_temp_plot
+```
+
+    ## Warning: Removed 15 rows containing missing values (geom_point).
+
+<img src="viz_and_eda_files/figure-gfm/unnamed-chunk-20-1.png" width="90%" />
+
+\#Themes
+
+``` r
+ggp_temp_plot + 
+  theme(legend.position = "bottom")
+```
+
+    ## Warning: Removed 15 rows containing missing values (geom_point).
+
+<img src="viz_and_eda_files/figure-gfm/unnamed-chunk-21-1.png" width="90%" />
