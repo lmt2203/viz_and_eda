@@ -894,24 +894,28 @@ weather_df %>%
 
 <img src="viz_and_eda_files/figure-gfm/unnamed-chunk-28-1.png" width="90%" />
 
-What if I wanted densities for tmin and tmax simultaneously?
+An example reorder `name` according to `tmax` values in each name:
 
 ``` r
-weather_df %>% 
-  filter(name == "CentralPark_NY") %>% 
-  pivot_longer(
-    tmax:tmin,
-    names_to = "observation",
-    values_to = "temperature"
-  ) %>% 
-  ggplot(aes(x = temperature, fill = observation)) +
-  geom_density(alpha =.5) 
+weather_df %>%
+  mutate(name = forcats::fct_reorder(name, tmax)) %>% 
+  ggplot(aes(x = name, y = tmax)) + 
+  geom_violin(aes(fill = name), color = "blue", alpha = .5) + 
+  theme(legend.position = "bottom")
 ```
+
+    ## Warning: Removed 3 rows containing non-finite values (stat_ydensity).
 
 <img src="viz_and_eda_files/figure-gfm/unnamed-chunk-29-1.png" width="90%" />
 
+What if I wanted densities for tmin and tmax simultaneously? Three-panel
+plot showing densities for `tmax` and `tmin` within each location, facet
+panels across the `name` variable, and create separate densities for
+`tmax` and `tmin` in each panel.
+
 ``` r
 weather_df %>% 
+  select(name, tmax,tmin) %>% 
   pivot_longer(
     tmax:tmin,
     names_to = "observation",
@@ -919,12 +923,38 @@ weather_df %>%
   ) %>% 
   ggplot(aes(x = temperature, fill = observation)) +
   geom_density(alpha =.5) +
-  facet_grid(.~name)
+  facet_grid(~name) +
+  viridis::scale_fill_viridis(discrete = TRUE)
 ```
 
     ## Warning: Removed 18 rows containing non-finite values (stat_density).
 
-<img src="viz_and_eda_files/figure-gfm/unnamed-chunk-29-2.png" width="90%" />
+<img src="viz_and_eda_files/figure-gfm/unnamed-chunk-30-1.png" width="90%" />
+
+#### Revisiting PULSE data and create a plot showing BDI score across visits
+
+``` r
+pulse_data = 
+  haven::read_sas("./data/public_pulse_data.sas7bdat") %>%
+  janitor::clean_names() %>%
+  pivot_longer(
+    bdi_score_bl:bdi_score_12m,
+    names_to = "visit", 
+    names_prefix = "bdi_score_",
+    values_to = "bdi") %>%
+  select(id, visit, everything()) %>%
+  mutate(
+    visit = recode(visit, "bl" = "00m"),
+    visit = factor(visit, levels = str_c(c("00", "01", "06", "12"), "m"))) %>%
+  arrange(id, visit)
+
+ggplot(pulse_data, aes(x = visit, y = bdi)) + 
+  geom_boxplot()
+```
+
+    ## Warning: Removed 879 rows containing non-finite values (stat_boxplot).
+
+<img src="viz_and_eda_files/figure-gfm/unnamed-chunk-31-1.png" width="90%" />
 
 #### Revisiting the pups
 
@@ -975,7 +1005,7 @@ fas_data %>%
 
     ## Warning: Removed 18 rows containing non-finite values (stat_ydensity).
 
-<img src="viz_and_eda_files/figure-gfm/unnamed-chunk-30-1.png" width="90%" />
+<img src="viz_and_eda_files/figure-gfm/unnamed-chunk-32-1.png" width="90%" />
 
 ``` r
 fas_data %>% 
@@ -992,7 +1022,7 @@ fas_data %>%
   facet_grid(day_of_tx ~ outcome)
 ```
 
-<img src="viz_and_eda_files/figure-gfm/unnamed-chunk-30-2.png" width="90%" />
+<img src="viz_and_eda_files/figure-gfm/unnamed-chunk-32-2.png" width="90%" />
 
 ``` r
 fas_data %>% 
@@ -1008,7 +1038,7 @@ fas_data %>%
   facet_grid(day_of_tx ~ outcome)
 ```
 
-<img src="viz_and_eda_files/figure-gfm/unnamed-chunk-30-3.png" width="90%" />
+<img src="viz_and_eda_files/figure-gfm/unnamed-chunk-32-3.png" width="90%" />
 
 # Exploratory analysis using data summaries
 
