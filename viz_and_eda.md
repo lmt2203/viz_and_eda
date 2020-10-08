@@ -1148,7 +1148,7 @@ weather_df %>%
 
 #### Counting things
 
-Count month/ name observation
+Count month/ name observation using `summarize(n_obs = n())`
 
 ``` r
 weather_df %>% 
@@ -1198,7 +1198,7 @@ weather_df %>%
     ## 10 CentralPark_NY 2017-10-01    31
     ## # … with 26 more rows
 
-We can also use `count()`
+We can also use `count(var = "n_obs")`
 
 ``` r
 weather_df %>% 
@@ -1249,7 +1249,8 @@ weather_df %>%
   table()
 ```
 
-Other helpful counters
+You can use `summarize()` to compute multiple summaries within each
+group.
 
 ``` r
 weather_df %>% 
@@ -1278,7 +1279,7 @@ weather_df %>%
     ## 11 2017-11-01    90     30
     ## 12 2017-12-01    93     31
 
-A digression on 2x2 table
+A digression on 2x2 table - `group_by` + `summarize`
 
 ``` r
 weather_df  %>% 
@@ -1287,24 +1288,21 @@ weather_df  %>%
     cold = case_when(
       tmax < 5 ~ "cold",
       tmax >= 5 ~ "not cold",
-      TRUE ~ ""
-    )
-  ) 
+      TRUE ~ "")) %>% 
+  filter(name != "Waikiki_HA") %>% 
+  group_by(name, cold) %>% 
+  summarize(count = n())
 ```
 
-    ## # A tibble: 730 x 8
-    ##    name           id          date        prcp  tmax  tmin month      cold    
-    ##    <chr>          <chr>       <date>     <dbl> <dbl> <dbl> <date>     <chr>   
-    ##  1 CentralPark_NY USW00094728 2017-01-01     0   8.9   4.4 2017-01-01 not cold
-    ##  2 CentralPark_NY USW00094728 2017-01-02    53   5     2.8 2017-01-01 not cold
-    ##  3 CentralPark_NY USW00094728 2017-01-03   147   6.1   3.9 2017-01-01 not cold
-    ##  4 CentralPark_NY USW00094728 2017-01-04     0  11.1   1.1 2017-01-01 not cold
-    ##  5 CentralPark_NY USW00094728 2017-01-05     0   1.1  -2.7 2017-01-01 cold    
-    ##  6 CentralPark_NY USW00094728 2017-01-06    13   0.6  -3.8 2017-01-01 cold    
-    ##  7 CentralPark_NY USW00094728 2017-01-07    81  -3.2  -6.6 2017-01-01 cold    
-    ##  8 CentralPark_NY USW00094728 2017-01-08     0  -3.8  -8.8 2017-01-01 cold    
-    ##  9 CentralPark_NY USW00094728 2017-01-09     0  -4.9  -9.9 2017-01-01 cold    
-    ## 10 CentralPark_NY USW00094728 2017-01-10     0   7.8  -6   2017-01-01 not cold
-    ## # … with 720 more rows
+    ## `summarise()` regrouping output by 'name' (override with `.groups` argument)
+
+    ## # A tibble: 4 x 3
+    ## # Groups:   name [2]
+    ##   name           cold     count
+    ##   <chr>          <chr>    <int>
+    ## 1 CentralPark_NY cold        44
+    ## 2 CentralPark_NY not cold   321
+    ## 3 Waterhole_WA   cold       172
+    ## 4 Waterhole_WA   not cold   193
 
 #### summarize() allows you to compute one-number summaries

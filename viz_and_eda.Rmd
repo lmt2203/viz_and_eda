@@ -654,7 +654,7 @@ weather_df %>%
 
 #### Counting things
 
-Count month/ name observation
+Count month/ name observation using `summarize(n_obs = n())`
 
 ```{r}
 weather_df %>% 
@@ -666,7 +666,7 @@ weather_df %>%
   summarize(n_obs = n())
 ```
 
-We can also use `count()` 
+We can also use `count(var = "n_obs")`
 
 ```{r}
 weather_df %>% 
@@ -684,7 +684,7 @@ weather_df %>%
   table()
 ```
 
-Other helpful counters
+You can use `summarize()` to compute multiple summaries within each group. 
 
 ```{r}
 weather_df %>% 
@@ -695,7 +695,7 @@ weather_df %>%
   )
 ```
 
-A digression on 2x2 table
+A digression on 2x2 table - `group_by` + `summarize`
 
 ```{r}
 weather_df  %>% 
@@ -704,9 +704,10 @@ weather_df  %>%
     cold = case_when(
       tmax < 5 ~ "cold",
       tmax >= 5 ~ "not cold",
-      TRUE ~ ""
-    )
-  ) 
+      TRUE ~ "")) %>% 
+  filter(name != "Waikiki_HA") %>% 
+  group_by(name, cold) %>% 
+  summarize(count = n())
 ```
 
 #### summarize() allows you to compute one-number summaries
