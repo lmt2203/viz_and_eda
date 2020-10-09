@@ -710,4 +710,74 @@ weather_df  %>%
   summarize(count = n())
 ```
 
-#### summarize() allows you to compute one-number summaries
+#### summarize() allows you to compute one-number summaries: mean(), median, var, sd, mad, IQR, min, max
+
+```{r}
+weather_df %>%
+  group_by(month) %>%
+  summarize(
+    mean_tmax = mean(tmax),
+    mean_prec = mean(prcp, na.rm = TRUE),
+    median_tmax = median(tmax),
+    sd_tmax = sd(tmax))
+```
+
+We can group by more than one variable
+
+```{r}
+weather_df %>%
+  group_by(name, month) %>%
+  summarize(
+    mean_tmax = mean(tmax),
+    median_tmax = median(tmax))
+```
+
+If you want to summarize multiple columns using the same summary, the across function is helpful.
+
+```{r}
+weather_df %>%
+  group_by(name, month) %>%
+  summarize(across(tmin:prcp, mean))
+```
+
+Incorporate grouping and summarizing
+
+```{r}
+weather_df %>% 
+  group_by(name, month) %>% 
+  summarize(mean_tmax = mean(tmax)) %>% 
+  ggplot(aes(x = month, y = mean_tmax, color = name)) +
+  geom_point() + geom_line() +
+  theme(legend.position = "bottom")
+
+weather_df %>%
+  group_by(name, month) %>%
+  summarize(mean_tmax = mean(tmax)) %>% 
+  pivot_wider(
+    names_from = name,
+    values_from = mean_tmax) %>% 
+  knitr::kable(digits = 1)
+```
+
+#### Grouped `mutate`
+
+using `mutate` with `group_by` will retain all original data points and new variables computed within groups. (vs summarizing which collapses groups into single data points)
+
+E.g: compare the daily max temperature to the annual average max temp for each station
+
+```{r}
+weather_df %>%
+  group_by(name) %>%
+  mutate(
+    mean_tmax = mean(tmax, na.rm = TRUE),
+    centered_tmax = tmax - mean_tmax) %>% 
+  ggplot(aes(x = date, y = centered_tmax, color = name)) + 
+    geom_point() 
+```
+
+#### Window functions
+
+```{r}
+
+```
+
