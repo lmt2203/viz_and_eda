@@ -7,14 +7,14 @@ Linh Tran
 library(tidyverse)
 ```
 
-    ## ── Attaching packages ───────────────────────────────────────────────────────────────────────────────────────────────────────── tidyverse 1.3.0 ──
+    ## ── Attaching packages ──────────────────────────────────────────────────────────────────────────────────────────────────── tidyverse 1.3.0 ──
 
     ## ✓ ggplot2 3.3.2     ✓ purrr   0.3.4
     ## ✓ tibble  3.0.3     ✓ dplyr   1.0.2
     ## ✓ tidyr   1.1.2     ✓ stringr 1.4.0
     ## ✓ readr   1.3.1     ✓ forcats 0.5.0
 
-    ## ── Conflicts ──────────────────────────────────────────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ──
+    ## ── Conflicts ─────────────────────────────────────────────────────────────────────────────────────────────────────── tidyverse_conflicts() ──
     ## x dplyr::filter() masks stats::filter()
     ## x dplyr::lag()    masks stats::lag()
 
@@ -787,15 +787,15 @@ ggplot(data = waikiki, aes(x = date, y = tmax, color = name)) +
 
 <img src="viz_and_eda_files/figure-gfm/unnamed-chunk-24-2.png" width="90%" />
 
-#### `patchwork`
+#### `patchwork` - fcombine separate ggplots into the same graphic
 
-Remember faceting?
+Remember faceting? lay out panels in a grid but only same kind of plot
 
 ``` r
 weather_df %>% 
   ggplot(aes(x = tmin, fill = name)) +
   geom_density(alpha = .5) +
-  facet_grid(.~name)
+  facet_grid(.~name)      #no row, column according to "name" variable
 ```
 
     ## Warning: Removed 15 rows containing non-finite values (stat_density).
@@ -878,13 +878,13 @@ character. When make plot, ggplot turns character variable to factor (1
 = central park, 2 = waikiki, 3 = waterhole) and if I want to put them
 into different order, is there a way to overwrite that?
 
-Control your factors
+Control your factors.
 
 ``` r
 weather_df %>% 
   mutate(
     name = factor(name),
-    name = forcats::fct_relevel(name, c("Waikiki_HA"))
+    name = forcats::fct_relevel(name, c("Waikiki_HA"))     #I want Waikiki to be my 1st factor
   ) %>% 
   ggplot(aes(x = name, y = tmax, fill = name)) +
   geom_violin(alpha =.5)
@@ -923,7 +923,7 @@ weather_df %>%
   ) %>% 
   ggplot(aes(x = temperature, fill = observation)) +
   geom_density(alpha =.5) +
-  facet_grid(~name) +
+  facet_grid(.~name) +
   viridis::scale_fill_viridis(discrete = TRUE)
 ```
 
@@ -1198,6 +1198,31 @@ weather_df %>%
     ## 10 CentralPark_NY 2017-10-01    31
     ## # … with 26 more rows
 
+``` r
+weather_df %>% 
+  ungroup() %>% 
+  group_by (month) %>% 
+  summarize(month_obs = n())
+```
+
+    ## `summarise()` ungrouping output (override with `.groups` argument)
+
+    ## # A tibble: 12 x 2
+    ##    month      month_obs
+    ##    <date>         <int>
+    ##  1 2017-01-01        93
+    ##  2 2017-02-01        84
+    ##  3 2017-03-01        93
+    ##  4 2017-04-01        90
+    ##  5 2017-05-01        93
+    ##  6 2017-06-01        90
+    ##  7 2017-07-01        93
+    ##  8 2017-08-01        93
+    ##  9 2017-09-01        90
+    ## 10 2017-10-01        93
+    ## 11 2017-11-01        90
+    ## 12 2017-12-01        93
+
 We can also use `count(var = "n_obs")`
 
 ``` r
@@ -1249,16 +1274,15 @@ weather_df %>%
   table()
 ```
 
-You can use `summarize()` to compute multiple summaries within each
-group.
+Other helpful countes - You can use `summarize()` to compute multiple
+summaries within each group.
 
 ``` r
 weather_df %>% 
   group_by(month) %>% 
   summarize(
     n_obs = n(),
-    n_days = n_distinct(date)
-  )
+    n_days = n_distinct(date))      #summarize the number of observation and number of days in each month
 ```
 
     ## `summarise()` ungrouping output (override with `.groups` argument)
@@ -1288,7 +1312,7 @@ weather_df  %>%
     cold = case_when(
       tmax < 5 ~ "cold",
       tmax >= 5 ~ "not cold",
-      TRUE ~ "")) %>% 
+      TRUE ~ "")) %>%      #if I miss any value just put it in something
   filter(name != "Waikiki_HA") %>% 
   group_by(name, cold) %>% 
   summarize(count = n())
@@ -1305,16 +1329,31 @@ weather_df  %>%
     ## 3 Waterhole_WA   cold       172
     ## 4 Waterhole_WA   not cold   193
 
+``` r
+weather_df  %>% 
+  filter(name != "Waikiki_HA") %>% 
+  mutate(
+    cold = case_when(
+      tmax < 5 ~ "cold",
+      tmax >= 5 ~ "not cold",
+      TRUE ~ "")) %>% 
+  janitor::tabyl(name,cold)     #creae a 2x2 table 
+```
+
+    ##            name cold not cold
+    ##  CentralPark_NY   44      321
+    ##    Waterhole_WA  172      193
+
 #### summarize() allows you to compute one-number summaries: mean(), median, var, sd, mad, IQR, min, max
 
 ``` r
 weather_df %>%
   group_by(month) %>%
   summarize(
-    mean_tmax = mean(tmax),
+    mean_tmax = mean(tmax, na.rm = TRUE),
     mean_prec = mean(prcp, na.rm = TRUE),
-    median_tmax = median(tmax),
-    sd_tmax = sd(tmax))
+    median_tmax = median(tmax, na.rm = TRUE),
+    sd_tmax = sd(tmax, na.rm = TRUE))
 ```
 
     ## `summarise()` ungrouping output (override with `.groups` argument)
@@ -1326,42 +1365,33 @@ weather_df %>%
     ##  2 2017-02-01      12.2     57.9          8.3   12.1 
     ##  3 2017-03-01      13.0     54.6          8.3   12.4 
     ##  4 2017-04-01      17.3     32.9         18.3   11.2 
-    ##  5 2017-05-01      NA       28.4         NA     NA   
+    ##  5 2017-05-01      19.9     28.4         19.4    9.29
     ##  6 2017-06-01      23.5     18.7         27.2    8.73
-    ##  7 2017-07-01      NA       12.7         NA     NA   
+    ##  7 2017-07-01      25.5     12.7         29.4    7.15
     ##  8 2017-08-01      26.3     10.2         27.2    5.87
     ##  9 2017-09-01      23.8      9.94        26.1    8.42
     ## 10 2017-10-01      20.1     41.5         22.2    9.75
     ## 11 2017-11-01      14.0     61.5         12.0   11.6 
     ## 12 2017-12-01      11.0     40.2          8.9   11.9
 
-We can group by more than one variable
+This is a dataframe\! So we can make a plot.
 
 ``` r
 weather_df %>%
   group_by(name, month) %>%
   summarize(
-    mean_tmax = mean(tmax),
-    median_tmax = median(tmax))
+    mean_tmax = mean(tmax, na.rm = TRUE),
+    mean_prcp = mean(prcp, na.rm = TRUE),
+    median_tmin = median(tmin, na.rm = TRUE)
+    ) %>% 
+  ggplot(aes(x = month, y = mean_tmax, color = name)) +
+  geom_point() +
+  geom_line()
 ```
 
     ## `summarise()` regrouping output by 'name' (override with `.groups` argument)
 
-    ## # A tibble: 36 x 4
-    ## # Groups:   name [3]
-    ##    name           month      mean_tmax median_tmax
-    ##    <chr>          <date>         <dbl>       <dbl>
-    ##  1 CentralPark_NY 2017-01-01      5.98         6.1
-    ##  2 CentralPark_NY 2017-02-01      9.28         8.3
-    ##  3 CentralPark_NY 2017-03-01      8.22         8.3
-    ##  4 CentralPark_NY 2017-04-01     18.3         18.3
-    ##  5 CentralPark_NY 2017-05-01     20.1         19.4
-    ##  6 CentralPark_NY 2017-06-01     26.3         27.2
-    ##  7 CentralPark_NY 2017-07-01     28.7         29.4
-    ##  8 CentralPark_NY 2017-08-01     27.2         27.2
-    ##  9 CentralPark_NY 2017-09-01     25.4         26.1
-    ## 10 CentralPark_NY 2017-10-01     21.8         22.2
-    ## # … with 26 more rows
+<img src="viz_and_eda_files/figure-gfm/unnamed-chunk-41-1.png" width="90%" />
 
 If you want to summarize multiple columns using the same summary, the
 across function is helpful.
@@ -1369,7 +1399,10 @@ across function is helpful.
 ``` r
 weather_df %>%
   group_by(name, month) %>%
-  summarize(across(tmin:prcp, mean))
+  summarize(
+    across(tmin:prcp, mean),
+    across(tmin:prcp, median)
+  )
 ```
 
     ## `summarise()` regrouping output by 'name' (override with `.groups` argument)
@@ -1390,6 +1423,77 @@ weather_df %>%
     ## 10 CentralPark_NY 2017-10-01 13.9   21.8   34.3
     ## # … with 26 more rows
 
+Reminder: sometimes your results are easier to read in another format
+
+``` r
+weather_df %>% 
+  group_by(name, month) %>% 
+  summarize(mean_tmax = mean(tmax, na.rm = TRUE)) %>% 
+  pivot_wider(
+    names_from = name,
+    values_from = mean_tmax
+  ) %>% 
+  knitr::kable(digits = 1)
+```
+
+    ## `summarise()` regrouping output by 'name' (override with `.groups` argument)
+
+| month      | CentralPark\_NY | Waikiki\_HA | Waterhole\_WA |
+| :--------- | --------------: | ----------: | ------------: |
+| 2017-01-01 |             6.0 |        27.8 |         \-1.4 |
+| 2017-02-01 |             9.3 |        27.2 |           0.0 |
+| 2017-03-01 |             8.2 |        29.1 |           1.7 |
+| 2017-04-01 |            18.3 |        29.7 |           3.9 |
+| 2017-05-01 |            20.1 |        30.1 |          10.1 |
+| 2017-06-01 |            26.3 |        31.3 |          12.9 |
+| 2017-07-01 |            28.7 |        31.8 |          16.3 |
+| 2017-08-01 |            27.2 |        32.0 |          19.6 |
+| 2017-09-01 |            25.4 |        31.7 |          14.2 |
+| 2017-10-01 |            21.8 |        30.3 |           8.3 |
+| 2017-11-01 |            12.3 |        28.4 |           1.4 |
+| 2017-12-01 |             4.5 |        26.5 |           2.2 |
+
+#### `group_by` and `mutate`
+
+``` r
+weather_df %>% 
+  group_by(name) %>% 
+  mutate(
+    mean_tmax = mean(tmax, na.rm = TRUE)
+  )
+```
+
+    ## # A tibble: 1,095 x 8
+    ## # Groups:   name [3]
+    ##    name           id          date        prcp  tmax  tmin month      mean_tmax
+    ##    <chr>          <chr>       <date>     <dbl> <dbl> <dbl> <date>         <dbl>
+    ##  1 CentralPark_NY USW00094728 2017-01-01     0   8.9   4.4 2017-01-01      17.4
+    ##  2 CentralPark_NY USW00094728 2017-01-02    53   5     2.8 2017-01-01      17.4
+    ##  3 CentralPark_NY USW00094728 2017-01-03   147   6.1   3.9 2017-01-01      17.4
+    ##  4 CentralPark_NY USW00094728 2017-01-04     0  11.1   1.1 2017-01-01      17.4
+    ##  5 CentralPark_NY USW00094728 2017-01-05     0   1.1  -2.7 2017-01-01      17.4
+    ##  6 CentralPark_NY USW00094728 2017-01-06    13   0.6  -3.8 2017-01-01      17.4
+    ##  7 CentralPark_NY USW00094728 2017-01-07    81  -3.2  -6.6 2017-01-01      17.4
+    ##  8 CentralPark_NY USW00094728 2017-01-08     0  -3.8  -8.8 2017-01-01      17.4
+    ##  9 CentralPark_NY USW00094728 2017-01-09     0  -4.9  -9.9 2017-01-01      17.4
+    ## 10 CentralPark_NY USW00094728 2017-01-10     0   7.8  -6   2017-01-01      17.4
+    ## # … with 1,085 more rows
+
+``` r
+weather_df %>% 
+  group_by(name) %>% 
+  mutate(
+    mean_tmax = mean(tmax, na.rm = TRUE),
+    centered_tmax = tmax - mean_tmax
+  ) %>% 
+  ggplot(aes(x = date, y = centered_tmax, color = name)) + 
+  geom_point()
+```
+
+    ## Warning: Removed 3 rows containing missing values (geom_point).
+
+<img src="viz_and_eda_files/figure-gfm/unnamed-chunk-44-1.png" width="90%" />
+
 Incorporate grouping and summarizing
 
 ``` r
@@ -1405,7 +1509,7 @@ weather_df %>%
 
     ## Warning: Removed 2 rows containing missing values (geom_point).
 
-<img src="viz_and_eda_files/figure-gfm/unnamed-chunk-43-1.png" width="90%" />
+<img src="viz_and_eda_files/figure-gfm/unnamed-chunk-45-1.png" width="90%" />
 
 ``` r
 weather_df %>%
@@ -1455,6 +1559,147 @@ weather_df %>%
 
     ## Warning: Removed 3 rows containing missing values (geom_point).
 
-<img src="viz_and_eda_files/figure-gfm/unnamed-chunk-44-1.png" width="90%" />
+<img src="viz_and_eda_files/figure-gfm/unnamed-chunk-46-1.png" width="90%" />
 
 #### Window functions
+
+Ranking function
+
+``` r
+weather_df %>% 
+  group_by(name, month) %>% 
+  mutate(temp_rank = min_rank(tmax))   #define a ranking according to min_rank of tmax
+```
+
+    ## # A tibble: 1,095 x 8
+    ## # Groups:   name, month [36]
+    ##    name           id          date        prcp  tmax  tmin month      temp_rank
+    ##    <chr>          <chr>       <date>     <dbl> <dbl> <dbl> <date>         <int>
+    ##  1 CentralPark_NY USW00094728 2017-01-01     0   8.9   4.4 2017-01-01        22
+    ##  2 CentralPark_NY USW00094728 2017-01-02    53   5     2.8 2017-01-01        12
+    ##  3 CentralPark_NY USW00094728 2017-01-03   147   6.1   3.9 2017-01-01        15
+    ##  4 CentralPark_NY USW00094728 2017-01-04     0  11.1   1.1 2017-01-01        27
+    ##  5 CentralPark_NY USW00094728 2017-01-05     0   1.1  -2.7 2017-01-01         5
+    ##  6 CentralPark_NY USW00094728 2017-01-06    13   0.6  -3.8 2017-01-01         4
+    ##  7 CentralPark_NY USW00094728 2017-01-07    81  -3.2  -6.6 2017-01-01         3
+    ##  8 CentralPark_NY USW00094728 2017-01-08     0  -3.8  -8.8 2017-01-01         2
+    ##  9 CentralPark_NY USW00094728 2017-01-09     0  -4.9  -9.9 2017-01-01         1
+    ## 10 CentralPark_NY USW00094728 2017-01-10     0   7.8  -6   2017-01-01        21
+    ## # … with 1,085 more rows
+
+``` r
+weather_df %>% 
+  group_by(name, month) %>% 
+  mutate(temp_rank = min_rank(tmax)) %>% 
+  filter(temp_rank == 1)    #coldest day
+```
+
+    ## # A tibble: 42 x 8
+    ## # Groups:   name, month [36]
+    ##    name           id          date        prcp  tmax  tmin month      temp_rank
+    ##    <chr>          <chr>       <date>     <dbl> <dbl> <dbl> <date>         <int>
+    ##  1 CentralPark_NY USW00094728 2017-01-09     0  -4.9  -9.9 2017-01-01         1
+    ##  2 CentralPark_NY USW00094728 2017-02-10     0   0    -7.1 2017-02-01         1
+    ##  3 CentralPark_NY USW00094728 2017-03-15     0  -3.2  -6.6 2017-03-01         1
+    ##  4 CentralPark_NY USW00094728 2017-04-01     0   8.9   2.8 2017-04-01         1
+    ##  5 CentralPark_NY USW00094728 2017-05-13   409  11.7   7.2 2017-05-01         1
+    ##  6 CentralPark_NY USW00094728 2017-06-06    15  14.4  11.1 2017-06-01         1
+    ##  7 CentralPark_NY USW00094728 2017-07-25     0  21.7  16.7 2017-07-01         1
+    ##  8 CentralPark_NY USW00094728 2017-08-29    74  20    16.1 2017-08-01         1
+    ##  9 CentralPark_NY USW00094728 2017-09-30     0  18.9  12.2 2017-09-01         1
+    ## 10 CentralPark_NY USW00094728 2017-10-31     0  13.9   7.2 2017-10-01         1
+    ## # … with 32 more rows
+
+Lag - helpful when you want to compute the change from one day to the
+next.
+
+``` r
+weather_df %>% 
+  group_by(name) %>% 
+  mutate(lag_temp = lag(tmax))
+```
+
+    ## # A tibble: 1,095 x 8
+    ## # Groups:   name [3]
+    ##    name           id          date        prcp  tmax  tmin month      lag_temp
+    ##    <chr>          <chr>       <date>     <dbl> <dbl> <dbl> <date>        <dbl>
+    ##  1 CentralPark_NY USW00094728 2017-01-01     0   8.9   4.4 2017-01-01     NA  
+    ##  2 CentralPark_NY USW00094728 2017-01-02    53   5     2.8 2017-01-01      8.9
+    ##  3 CentralPark_NY USW00094728 2017-01-03   147   6.1   3.9 2017-01-01      5  
+    ##  4 CentralPark_NY USW00094728 2017-01-04     0  11.1   1.1 2017-01-01      6.1
+    ##  5 CentralPark_NY USW00094728 2017-01-05     0   1.1  -2.7 2017-01-01     11.1
+    ##  6 CentralPark_NY USW00094728 2017-01-06    13   0.6  -3.8 2017-01-01      1.1
+    ##  7 CentralPark_NY USW00094728 2017-01-07    81  -3.2  -6.6 2017-01-01      0.6
+    ##  8 CentralPark_NY USW00094728 2017-01-08     0  -3.8  -8.8 2017-01-01     -3.2
+    ##  9 CentralPark_NY USW00094728 2017-01-09     0  -4.9  -9.9 2017-01-01     -3.8
+    ## 10 CentralPark_NY USW00094728 2017-01-10     0   7.8  -6   2017-01-01     -4.9
+    ## # … with 1,085 more rows
+
+``` r
+#Lag by 5 values
+weather_df %>% 
+  group_by(name) %>% 
+  mutate(lag_temp = lag(tmax, 5))
+```
+
+    ## # A tibble: 1,095 x 8
+    ## # Groups:   name [3]
+    ##    name           id          date        prcp  tmax  tmin month      lag_temp
+    ##    <chr>          <chr>       <date>     <dbl> <dbl> <dbl> <date>        <dbl>
+    ##  1 CentralPark_NY USW00094728 2017-01-01     0   8.9   4.4 2017-01-01     NA  
+    ##  2 CentralPark_NY USW00094728 2017-01-02    53   5     2.8 2017-01-01     NA  
+    ##  3 CentralPark_NY USW00094728 2017-01-03   147   6.1   3.9 2017-01-01     NA  
+    ##  4 CentralPark_NY USW00094728 2017-01-04     0  11.1   1.1 2017-01-01     NA  
+    ##  5 CentralPark_NY USW00094728 2017-01-05     0   1.1  -2.7 2017-01-01     NA  
+    ##  6 CentralPark_NY USW00094728 2017-01-06    13   0.6  -3.8 2017-01-01      8.9
+    ##  7 CentralPark_NY USW00094728 2017-01-07    81  -3.2  -6.6 2017-01-01      5  
+    ##  8 CentralPark_NY USW00094728 2017-01-08     0  -3.8  -8.8 2017-01-01      6.1
+    ##  9 CentralPark_NY USW00094728 2017-01-09     0  -4.9  -9.9 2017-01-01     11.1
+    ## 10 CentralPark_NY USW00094728 2017-01-10     0   7.8  -6   2017-01-01      1.1
+    ## # … with 1,085 more rows
+
+``` r
+#temperature change from one day to next
+weather_df %>% 
+  group_by(name) %>% 
+  mutate(temp_change = tmax - lag(tmax))
+```
+
+    ## # A tibble: 1,095 x 8
+    ## # Groups:   name [3]
+    ##    name           id         date        prcp  tmax  tmin month      temp_change
+    ##    <chr>          <chr>      <date>     <dbl> <dbl> <dbl> <date>           <dbl>
+    ##  1 CentralPark_NY USW000947… 2017-01-01     0   8.9   4.4 2017-01-01      NA    
+    ##  2 CentralPark_NY USW000947… 2017-01-02    53   5     2.8 2017-01-01      -3.9  
+    ##  3 CentralPark_NY USW000947… 2017-01-03   147   6.1   3.9 2017-01-01       1.10 
+    ##  4 CentralPark_NY USW000947… 2017-01-04     0  11.1   1.1 2017-01-01       5    
+    ##  5 CentralPark_NY USW000947… 2017-01-05     0   1.1  -2.7 2017-01-01     -10    
+    ##  6 CentralPark_NY USW000947… 2017-01-06    13   0.6  -3.8 2017-01-01      -0.5  
+    ##  7 CentralPark_NY USW000947… 2017-01-07    81  -3.2  -6.6 2017-01-01      -3.8  
+    ##  8 CentralPark_NY USW000947… 2017-01-08     0  -3.8  -8.8 2017-01-01      -0.600
+    ##  9 CentralPark_NY USW000947… 2017-01-09     0  -4.9  -9.9 2017-01-01      -1.1  
+    ## 10 CentralPark_NY USW000947… 2017-01-10     0   7.8  -6   2017-01-01      12.7  
+    ## # … with 1,085 more rows
+
+``` r
+weather_df %>% 
+  group_by(name) %>% 
+  mutate(temp_change = tmax - lag(tmax)) %>% 
+  summarize(
+    temp_change_max = max(temp_change, na.rm = TRUE),
+    temp_change_sd = sd(temp_change, na.rm = TRUE)
+  )
+```
+
+    ## `summarise()` ungrouping output (override with `.groups` argument)
+
+    ## # A tibble: 3 x 3
+    ##   name           temp_change_max temp_change_sd
+    ##   <chr>                    <dbl>          <dbl>
+    ## 1 CentralPark_NY            12.7           4.45
+    ## 2 Waikiki_HA                 6.7           1.23
+    ## 3 Waterhole_WA               8             3.13
+
+#### Quick note
+
+Summarize only gets you so far.

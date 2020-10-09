@@ -458,15 +458,15 @@ ggplot(data = waikiki, aes(x = date, y = tmax, color = name)) +
   geom_line(data = central_park)
 ```
 
-#### `patchwork` 
+#### `patchwork` - fcombine separate ggplots into the same graphic
 
-Remember faceting?
+Remember faceting? lay out panels in a grid but only same kind of plot
 
 ```{r}
 weather_df %>% 
   ggplot(aes(x = tmin, fill = name)) +
   geom_density(alpha = .5) +
-  facet_grid(.~name)
+  facet_grid(.~name)      #no row, column according to "name" variable
 ```
 
 What happens when you want multipanel plots but can't facet..?
@@ -510,13 +510,13 @@ weather_df %>%
 name argument might not make perfect sense. It goes in alphabetical order according to the name. 
 In the dataset I have, the name variable is character. When make plot, ggplot turns character variable to factor (1 = central park, 2 = waikiki, 3 = waterhole) and if I want to put them into different order, is there a way to overwrite that?
 
-Control your factors
+Control your factors. 
 
 ```{r}
 weather_df %>% 
   mutate(
     name = factor(name),
-    name = forcats::fct_relevel(name, c("Waikiki_HA"))
+    name = forcats::fct_relevel(name, c("Waikiki_HA"))     #I want Waikiki to be my 1st factor
   ) %>% 
   ggplot(aes(x = name, y = tmax, fill = name)) +
   geom_violin(alpha =.5)
@@ -544,7 +544,7 @@ weather_df %>%
   ) %>% 
   ggplot(aes(x = temperature, fill = observation)) +
   geom_density(alpha =.5) +
-  facet_grid(~name) +
+  facet_grid(.~name) +
   viridis::scale_fill_viridis(discrete = TRUE)
 ```
 
@@ -664,6 +664,11 @@ weather_df %>%
 weather_df %>% 
   group_by(name, month) %>% 
   summarize(n_obs = n())
+
+weather_df %>% 
+  ungroup() %>% 
+  group_by (month) %>% 
+  summarize(month_obs = n())
 ```
 
 We can also use `count(var = "n_obs")`
@@ -684,15 +689,14 @@ weather_df %>%
   table()
 ```
 
-You can use `summarize()` to compute multiple summaries within each group. 
+Other helpful countes - You can use `summarize()` to compute multiple summaries within each group. 
 
 ```{r}
 weather_df %>% 
   group_by(month) %>% 
   summarize(
     n_obs = n(),
-    n_days = n_distinct(date)
-  )
+    n_days = n_distinct(date))      #summarize the number of observation and number of days in each month
 ```
 
 A digression on 2x2 table - `group_by` + `summarize`
@@ -704,10 +708,19 @@ weather_df  %>%
     cold = case_when(
       tmax < 5 ~ "cold",
       tmax >= 5 ~ "not cold",
-      TRUE ~ "")) %>% 
+      TRUE ~ "")) %>%      #if I miss any value just put it in something
   filter(name != "Waikiki_HA") %>% 
   group_by(name, cold) %>% 
   summarize(count = n())
+
+weather_df  %>% 
+  filter(name != "Waikiki_HA") %>% 
+  mutate(
+    cold = case_when(
+      tmax < 5 ~ "cold",
+      tmax >= 5 ~ "not cold",
+      TRUE ~ "")) %>% 
+  janitor::tabyl(name,cold)     #creae a 2x2 table 
 ```
 
 #### summarize() allows you to compute one-number summaries: mean(), median, var, sd, mad, IQR, min, max
@@ -716,20 +729,25 @@ weather_df  %>%
 weather_df %>%
   group_by(month) %>%
   summarize(
-    mean_tmax = mean(tmax),
+    mean_tmax = mean(tmax, na.rm = TRUE),
     mean_prec = mean(prcp, na.rm = TRUE),
-    median_tmax = median(tmax),
-    sd_tmax = sd(tmax))
+    median_tmax = median(tmax, na.rm = TRUE),
+    sd_tmax = sd(tmax, na.rm = TRUE))
 ```
 
-We can group by more than one variable
+This is a dataframe! So we can make a plot. 
 
 ```{r}
 weather_df %>%
   group_by(name, month) %>%
   summarize(
-    mean_tmax = mean(tmax),
-    median_tmax = median(tmax))
+    mean_tmax = mean(tmax, na.rm = TRUE),
+    mean_prcp = mean(prcp, na.rm = TRUE),
+    median_tmin = median(tmin, na.rm = TRUE)
+    ) %>% 
+  ggplot(aes(x = month, y = mean_tmax, color = name)) +
+  geom_point() +
+  geom_line()
 ```
 
 If you want to summarize multiple columns using the same summary, the across function is helpful.
@@ -737,7 +755,42 @@ If you want to summarize multiple columns using the same summary, the across fun
 ```{r}
 weather_df %>%
   group_by(name, month) %>%
-  summarize(across(tmin:prcp, mean))
+  summarize(
+    across(tmin:prcp, mean),
+    across(tmin:prcp, median)
+  )
+```
+
+Reminder: sometimes your results are easier to read in another format
+
+```{r}
+weather_df %>% 
+  group_by(name, month) %>% 
+  summarize(mean_tmax = mean(tmax, na.rm = TRUE)) %>% 
+  pivot_wider(
+    names_from = name,
+    values_from = mean_tmax
+  ) %>% 
+  knitr::kable(digits = 1)
+```
+
+#### `group_by` and `mutate`
+
+```{r}
+weather_df %>% 
+  group_by(name) %>% 
+  mutate(
+    mean_tmax = mean(tmax, na.rm = TRUE)
+  )
+
+weather_df %>% 
+  group_by(name) %>% 
+  mutate(
+    mean_tmax = mean(tmax, na.rm = TRUE),
+    centered_tmax = tmax - mean_tmax
+  ) %>% 
+  ggplot(aes(x = date, y = centered_tmax, color = name)) + 
+  geom_point()
 ```
 
 Incorporate grouping and summarizing
@@ -777,7 +830,47 @@ weather_df %>%
 
 #### Window functions
 
-```{r}
+Ranking function
 
+```{r}
+weather_df %>% 
+  group_by(name, month) %>% 
+  mutate(temp_rank = min_rank(tmax))   #define a ranking according to min_rank of tmax
+
+weather_df %>% 
+  group_by(name, month) %>% 
+  mutate(temp_rank = min_rank(tmax)) %>% 
+  filter(temp_rank == 1)    #coldest day
 ```
+
+Lag - helpful when you want to compute the change from one day to the next. 
+
+```{r}
+weather_df %>% 
+  group_by(name) %>% 
+  mutate(lag_temp = lag(tmax))
+
+#Lag by 5 values
+weather_df %>% 
+  group_by(name) %>% 
+  mutate(lag_temp = lag(tmax, 5))
+
+#temperature change from one day to next
+weather_df %>% 
+  group_by(name) %>% 
+  mutate(temp_change = tmax - lag(tmax))
+
+weather_df %>% 
+  group_by(name) %>% 
+  mutate(temp_change = tmax - lag(tmax)) %>% 
+  summarize(
+    temp_change_max = max(temp_change, na.rm = TRUE),
+    temp_change_sd = sd(temp_change, na.rm = TRUE)
+  )
+```
+
+#### Quick note
+
+Summarize only gets you so far.
+
 
